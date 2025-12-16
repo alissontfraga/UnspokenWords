@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-UnspokenwordsApplication<unspokenwords>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.alissontfraga.unspokenwords.UnspokenwordsApplication",
+            "projectName": "unspokenwords",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
