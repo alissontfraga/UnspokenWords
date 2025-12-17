@@ -4,7 +4,6 @@
 A web application where users can write and store words they never said.
 
 
-
 ## 🚀 Features
 
 - User authentication (JWT + HttpOnly cookies)
@@ -31,9 +30,6 @@ A web application where users can write and store words they never said.
 - CSS
 
 
-
-
-
 ## 📸 Screenshots
 
 
@@ -46,7 +42,7 @@ A web application where users can write and store words they never said.
 ### New Message
 <img src="screenshots/new-message.png" width="600" />
 
-## 📌 Documentação da API
+## 📌 API Documentation
 
 | Method | Route          | Description    |
 | ------ | -------------- | -------------- |
