@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { api } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import "../styles/newmessage.css";
+import toast from "react-hot-toast";  
 
 export default function NewMessage() {
 
@@ -25,12 +26,23 @@ export default function NewMessage() {
 
   async function submit(e) {
     e.preventDefault();
+
+    if (
+      !form.content.trim() ||
+      !form.category ||
+      !form.forPerson.trim()
+    ) {
+      toast.error("Please fill in all required fields!");
+      return;
+    }
+
     try {
       await api.post("/messages", form);
+      toast.success("Message saved");
       nav("/messages");
     } catch (err) {
       console.error(err);
-      alert("Erro ao criar mensagem");
+      toast.error("Failed to create message");
     }
   }
 
@@ -44,7 +56,8 @@ export default function NewMessage() {
           name="content"
           placeholder="What you didn't say..."
           value={form.content}
-          onChange={update} />
+          onChange={update} 
+           />
         <div className="category-select">
           {categories.map(c => (
             <label key={c} className="cat-option">
@@ -53,7 +66,8 @@ export default function NewMessage() {
                 name="category"
                 value={c}
                 checked={form.category === c}
-                onChange={update} />
+                onChange={update} 
+                />
               <span>{c}</span>
             </label>
           ))}
@@ -66,7 +80,8 @@ export default function NewMessage() {
             name="forPerson"
             placeholder="Who is this for?"
             value={form.forPerson}
-            onChange={update} />
+            onChange={update} 
+            />
         </div>
 
 
