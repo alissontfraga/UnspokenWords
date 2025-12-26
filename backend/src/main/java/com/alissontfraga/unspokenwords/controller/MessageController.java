@@ -7,11 +7,14 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import com.alissontfraga.unspokenwords.dto.message.MessageRequestDTO;
 import com.alissontfraga.unspokenwords.model.Message;
 import com.alissontfraga.unspokenwords.model.User;
 import com.alissontfraga.unspokenwords.repository.MessageRepository;
 import com.alissontfraga.unspokenwords.service.MessageService;
 import com.alissontfraga.unspokenwords.service.UserService;
+
+import jakarta.validation.Valid;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -35,24 +38,26 @@ public class MessageController {
         return messageRepository.findByOwnerId(u.getId());
     }
 
+
+
     @PostMapping
     public ResponseEntity<Message> create(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody Message payload
+        @AuthenticationPrincipal UserDetails userDetails,
+        @RequestBody @Valid MessageRequestDTO dto
     ) {
         User u = userService.findByUsername(userDetails.getUsername());
 
-        // define o dono da mensagem
-        payload.setOwner(u);
+        Message message = new Message();
+        message.setContent(dto.content());
+        message.setCategory(dto.category());
+        message.setForPerson(dto.forPerson());
+        message.setDate(dto.date() != null ? dto.date() : LocalDate.now());
+        message.setOwner(u);
 
-        // se a data não vier no JSON, usa a data de hoje como fallback (opcional)
-        if (payload.getDate() == null) {
-            payload.setDate(LocalDate.now());
-        }
-
-        Message saved = messageRepository.save(payload);
+        Message saved = messageRepository.save(message);
         return ResponseEntity.ok(saved);
     }
+
 
 
 
@@ -60,7 +65,7 @@ public class MessageController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteMessage(@PathVariable String id, Authentication auth) {
 
-        String username = auth.getName(); // usuário logado
+        String username = auth.getName(); // user logged in
 
         try {
             messageService.delete(id, username);
