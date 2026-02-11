@@ -2,83 +2,69 @@ package com.alissontfraga.unspokenwords.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import com.alissontfraga.unspokenwords.dto.message.MessageRequestDTO;
-import com.alissontfraga.unspokenwords.model.Message;
-import com.alissontfraga.unspokenwords.model.User;
-import com.alissontfraga.unspokenwords.repository.MessageRepository;
+import com.alissontfraga.unspokenwords.dto.message.MessageRequest;
+import com.alissontfraga.unspokenwords.dto.message.MessageResponse;
+import com.alissontfraga.unspokenwords.dto.message.MessageUpdateRequest;
 import com.alissontfraga.unspokenwords.service.MessageService;
-import com.alissontfraga.unspokenwords.service.UserService;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
-import java.time.LocalDate;
 import java.util.List;
-
 @RestController
 @RequestMapping("/api/messages")
+@RequiredArgsConstructor
 public class MessageController {
-    private final MessageRepository messageRepository;
-    private final UserService userService;
+
     private final MessageService messageService;
 
-    public MessageController(MessageRepository messageRepository, UserService userService, MessageService messageService) {
-        this.messageRepository = messageRepository;
-        this.userService = userService;
-        this.messageService = messageService;
-    }
-
     @GetMapping
-    public List<Message> list(@AuthenticationPrincipal UserDetails userDetails) {
-        User u = userService.findByUsername(userDetails.getUsername());
-        return messageRepository.findByOwnerId(u.getId());
+    public ResponseEntity<List<MessageResponse>> list(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        return ResponseEntity.ok(
+                messageService.list(userDetails.getUsername())
+        );
     }
-
-
 
     @PostMapping
-    public ResponseEntity<Message> create(
-        @AuthenticationPrincipal UserDetails userDetails,
-        @RequestBody @Valid MessageRequestDTO dto
+    public ResponseEntity<MessageResponse> create(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody @Valid MessageRequest dto
     ) {
-        User u = userService.findByUsername(userDetails.getUsername());
+        MessageResponse created =
+                messageService.create(userDetails.getUsername(), dto);
 
-        Message message = new Message();
-        message.setContent(dto.content());
-        message.setCategory(dto.category());
-        message.setForPerson(dto.forPerson());
-        message.setDate(dto.date() != null ? dto.date() : LocalDate.now());
-        message.setOwner(u);
-
-        Message saved = messageRepository.save(message);
-        return ResponseEntity.ok(saved);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(created);
     }
 
-
-
-
+    @PatchMapping("/{id}")
+    public ResponseEntity<MessageResponse> update(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody @Valid MessageUpdateRequest dto
+    ) {
+        return ResponseEntity.ok(
+                messageService.update(
+                        id,
+                        userDetails.getUsername(),
+                        dto
+                )
+        );
+    }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteMessage(@PathVariable String id, Authentication auth) {
-
-        String username = auth.getName(); // user logged in
-
-        try {
-            messageService.delete(id, username);
-            return ResponseEntity.noContent().build();
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        }
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        messageService.delete(id, userDetails.getUsername());
+        return ResponseEntity.noContent().build();
     }
-
-
-
 }
