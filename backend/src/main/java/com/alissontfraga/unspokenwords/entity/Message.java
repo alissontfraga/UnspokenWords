@@ -1,9 +1,10 @@
-package com.alissontfraga.unspokenwords.model;
+package com.alissontfraga.unspokenwords.entity;
 
 import java.time.LocalDate;
 
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,32 +16,34 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @Table(name = "messages")
+@Entity
 public class Message {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Column(columnDefinition = "text", nullable = false)
-    @NotBlank
+    @Column(nullable = false, length = 80)
+    @NotNull
     private String content;
 
     @Column(nullable = false)
     @NotBlank
     private String category;
 
-    @Column(nullable = false)
+    @Column(name = "for_person", nullable = false)
     @NotBlank
     private String forPerson;
 

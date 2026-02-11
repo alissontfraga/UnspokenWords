@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: unspokenwords
+
+  jpa:
+    database: POSTGRESQL
+    hibernate:
+      ddl-auto: validate
+    show-sql: false 
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+server:
+  port: 8080
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: ${JWT_EXPIRATION_MS}
+
+frontend:
+  origin: ${FRONTEND_ORIGIN}

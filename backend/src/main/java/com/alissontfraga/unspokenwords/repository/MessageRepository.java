@@ -4,8 +4,10 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.alissontfraga.unspokenwords.model.Message;
+import com.alissontfraga.unspokenwords.entity.Message;
 
-    public interface MessageRepository extends JpaRepository<Message, String> {
-        List<Message> findByOwnerId(String ownerId);
-    }
+public interface MessageRepository extends JpaRepository<Message, Long> {
+
+    List<Message> findByOwner_Id(Long ownerId);
+
+}
