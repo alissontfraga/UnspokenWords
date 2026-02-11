@@ -3,116 +3,62 @@ package com.alissontfraga.unspokenwords.controller;
 import java.util.Map;
 
 import org.springframework.http.*;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import com.alissontfraga.unspokenwords.config.JwtUtil;
+import com.alissontfraga.unspokenwords.security.JwtUtil;
 import com.alissontfraga.unspokenwords.dto.auth.AuthRequest;
 import com.alissontfraga.unspokenwords.dto.auth.AuthResponse;
-import com.alissontfraga.unspokenwords.dto.auth.SignupDTO;
+import com.alissontfraga.unspokenwords.dto.auth.RegisterRequest;
+import com.alissontfraga.unspokenwords.dto.auth.RegisterResponse;
+import com.alissontfraga.unspokenwords.entity.User;
 import com.alissontfraga.unspokenwords.service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
+
     private final UserService userService;
     private final JwtUtil jwtUtil;
-    private final BCryptPasswordEncoder encoder;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthController(UserService userService, JwtUtil jwtUtil, BCryptPasswordEncoder encoder) {
-        this.userService = userService;
-        this.jwtUtil = jwtUtil;
-        this.encoder = encoder;
+    @Operation(summary = "Sign up", description = "create a user")
+    @PostMapping("/register")
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest dto ) {
+        User user = userService.createUser(dto.username(), dto.password());
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(new RegisterResponse(user.getId(), user.getUsername()));
     }
 
-    @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody SignupDTO dto) {
-
-        if (userService.findByUsername(dto.username()) != null) {
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "Username already exists"));
-        }
-
-        userService.createUser(dto.username(), dto.password(), encoder);
-
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
-
-
+    @Operation(summary = "Log in", description = "log in to a user account")
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest req) {
-        var user = userService.findByUsername(req.username());
-        if (user == null || !encoder.matches(req.password(), user.getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
 
-        String token = jwtUtil.generateToken(user.getUsername());
+    User user = userService.findByUsername(req.username());
 
-        ResponseCookie cookie = ResponseCookie.from("jwt", token)
-                .httpOnly(true)
-                .secure(false) // deixe false no localhost; true em produção (HTTPS)
-                .path("/")
-                .maxAge(3600)
-                .sameSite("Strict")
-                .build();
+    if (user == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new AuthResponse("Logged in", user.getUsername()));
+    if (!passwordEncoder.matches(req.password(), user.getPassword())) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    String token = jwtUtil.generateToken(user);
+    return ResponseEntity.ok(new AuthResponse(token, user.getUsername()));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
-        ResponseCookie cookie = ResponseCookie.from("jwt", "")
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(0)
-                .sameSite("Lax")
-                .build();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(Map.of("message", "Logged out"));
+        // Nada para invalidar no servidor
+        /* Logout só no front-end, por ser um MVP, caso for mais profissional posso implementar o logout real + refresh tokens + Cookies HTTP Only + rotação de refresh tokens */
+        return ResponseEntity.ok(
+            Map.of("message", "Logged out successfully")
+        );
     }
-
-
-    @GetMapping("/me")
-    public ResponseEntity<?> me(@RequestHeader("Authorization") String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        String token = authHeader.substring(7);
-        if (!jwtUtil.validateToken(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        String username = jwtUtil.getUsernameFromToken(token);
-        var user = userService.findByUsername(username);
-
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-
-        return ResponseEntity.ok(Map.of(
-                "username", user.getUsername(),
-                "id", user.getId()
-        ));
-    }
-
-
-    //only postman
-    @DeleteMapping("/delete/{username}")
-    public ResponseEntity<?> deleteUser(@PathVariable String username) {
-        if (userService.findByUsername(username) == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-        }
-
-        userService.deleteByUsername(username);
-        return ResponseEntity.ok("User deleted");
-    }
-
 
 }
