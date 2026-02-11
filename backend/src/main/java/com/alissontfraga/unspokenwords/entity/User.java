@@ -3,8 +3,6 @@ package com.alissontfraga.unspokenwords.entity;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.springframework.data.annotation.Id;
-
 import com.alissontfraga.unspokenwords.enums.Role;
 
 import jakarta.persistence.CollectionTable;
@@ -16,6 +14,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
