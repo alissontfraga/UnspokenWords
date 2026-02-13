@@ -2,8 +2,8 @@ package com.alissontfraga.unspokenwords.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.alissontfraga.unspokenwords.dto.message.MessageRequest;
@@ -11,60 +11,67 @@ import com.alissontfraga.unspokenwords.dto.message.MessageResponse;
 import com.alissontfraga.unspokenwords.dto.message.MessageUpdateRequest;
 import com.alissontfraga.unspokenwords.service.MessageService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+
 @RestController
+@PreAuthorize("hasRole('USER')")
 @RequestMapping("/api/messages")
 @RequiredArgsConstructor
 public class MessageController {
 
     private final MessageService messageService;
 
+    @Operation(summary = "List messages", description = "Lists all messages belonging to the authenticated user")
     @GetMapping
     public ResponseEntity<List<MessageResponse>> list(
-            @AuthenticationPrincipal UserDetails userDetails
+            Authentication authentication
     ) {
         return ResponseEntity.ok(
-                messageService.list(userDetails.getUsername())
+                messageService.list(authentication.getName())
         );
     }
 
+    @Operation(summary = "Create message", description = "Creates a new message for the authenticated user")
     @PostMapping
     public ResponseEntity<MessageResponse> create(
-            @AuthenticationPrincipal UserDetails userDetails,
+            Authentication authentication,
             @RequestBody @Valid MessageRequest dto
     ) {
         MessageResponse created =
-                messageService.create(userDetails.getUsername(), dto);
+                messageService.create(authentication.getName(), dto);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(created);
     }
 
+    @Operation(summary = "Update message", description = "Updates a message belonging to the authenticated user")
     @PatchMapping("/{id}")
     public ResponseEntity<MessageResponse> update(
             @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails,
+            Authentication authentication,
             @RequestBody @Valid MessageUpdateRequest dto
     ) {
         return ResponseEntity.ok(
                 messageService.update(
                         id,
-                        userDetails.getUsername(),
+                        authentication.getName(),
                         dto
                 )
         );
     }
 
+    @Operation(summary = "Delete Message", description = "Deletes the message with the given ID if it belongs to the authenticated user")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails
+            Authentication authentication
     ) {
-        messageService.delete(id, userDetails.getUsername());
+        messageService.delete(id, authentication.getName());
         return ResponseEntity.noContent().build();
     }
 }

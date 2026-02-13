@@ -44,8 +44,8 @@ public class User {
     @Enumerated(EnumType.STRING)
     @CollectionTable(
         name = "user_roles",
-        joinColumns = @JoinColumn(name = "user_id")
+        joinColumns = @JoinColumn(name = "user_id", nullable = false)
     )
-    @Column(name = "role")
+    @Column(name = "role", nullable = false)
     private Set<Role> roles = new HashSet<>();
 }
