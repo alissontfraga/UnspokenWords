@@ -10,6 +10,7 @@ import com.alissontfraga.unspokenwords.dto.auth.UserResponse;
 import com.alissontfraga.unspokenwords.entity.User;
 import com.alissontfraga.unspokenwords.service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -20,6 +21,7 @@ public class UserController {
     private final UserService userService;
 
     @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Get current user", description = "Retrieves the currently authenticated user's information")
     @GetMapping("/me")
     public UserResponse me(Authentication authentication) {
         User user = userService.findByUsername(authentication.getName());
