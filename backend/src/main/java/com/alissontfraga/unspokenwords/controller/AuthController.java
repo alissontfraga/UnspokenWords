@@ -1,6 +1,6 @@
 package com.alissontfraga.unspokenwords.controller;
 
-import java.util.Map;
+import java.time.Duration;
 
 import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,8 +15,10 @@ import com.alissontfraga.unspokenwords.entity.User;
 import com.alissontfraga.unspokenwords.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
-    @Operation(summary = "Sign up", description = "create a user")
+    @Operation(summary = "Sign up", description = "create a new user account")
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest dto ) {
         User user = userService.createUser(dto.username(), dto.password());
@@ -34,31 +36,51 @@ public class AuthController {
             .body(new RegisterResponse(user.getId(), user.getUsername()));
     }
 
-    @Operation(summary = "Log in", description = "log in to a user account")
+    @Operation(summary = "Log in", description = "Logs in a user and sets an HttpOnly authentication cookie")
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest req) {
+    public ResponseEntity<AuthResponse> login(
+            @RequestBody AuthRequest req,
+            HttpServletResponse response
+    ) {
 
-    User user = userService.findByUsername(req.username());
+        User user = userService.findByUsername(req.username());
 
-    if (user == null) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (user == null ||
+            !passwordEncoder.matches(req.password(), user.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String token = jwtUtil.generateToken(user);
+
+        ResponseCookie cookie = ResponseCookie.from("token", token)
+                .httpOnly(true)
+                .secure(false) // true em produção (HTTPS)
+                .path("/")
+                .sameSite("Lax")
+                .maxAge(Duration.ofHours(1))
+                .build();
+
+        response.addHeader("Set-Cookie", cookie.toString());
+
+        return ResponseEntity.ok(new AuthResponse(user.getUsername()));
     }
 
-    if (!passwordEncoder.matches(req.password(), user.getPassword())) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+   @Operation(summary = "Log out", description = "Logs out the current user by clearing the HttpOnly authentication cookie")
+   @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletResponse response) {
+
+        ResponseCookie cookie = ResponseCookie.from("token", "")
+                .httpOnly(true)
+                .secure(false) // true em produção
+                .path("/")
+                .sameSite("Lax")
+                .maxAge(Duration.ZERO)
+                .build();
+
+        response.addHeader("Set-Cookie", cookie.toString());
+
+        return ResponseEntity.ok().build();
     }
 
-    String token = jwtUtil.generateToken(user);
-    return ResponseEntity.ok(new AuthResponse(token, user.getUsername()));
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        // Nada para invalidar no servidor
-        /* Logout só no front-end, por ser um MVP, caso for mais profissional posso implementar o logout real + refresh tokens + Cookies HTTP Only + rotação de refresh tokens */
-        return ResponseEntity.ok(
-            Map.of("message", "Logged out successfully")
-        );
-    }
 
 }
