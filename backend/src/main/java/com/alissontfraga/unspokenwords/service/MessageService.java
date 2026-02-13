@@ -17,6 +17,7 @@ import com.alissontfraga.unspokenwords.entity.Message;
 import com.alissontfraga.unspokenwords.repository.MessageRepository;
 
 import lombok.RequiredArgsConstructor;
+
 @Transactional
 @RequiredArgsConstructor
 @Service
@@ -25,9 +26,6 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final UserService userService;
 
-    /* =======================
-       List
-       ======================= */
 
     public List<MessageResponse> list(String username) {
         User user = userService.findByUsername(username);
@@ -38,9 +36,6 @@ public class MessageService {
                 .toList();
     }
 
-    /* =======================
-       Create
-       ======================= */
 
     public MessageResponse create(String username, MessageRequest dto) {
 
@@ -65,25 +60,19 @@ public class MessageService {
         );
     }
 
-    /* =======================
-       Update (partial)
-       ======================= */
+
 
     public MessageResponse update(
             Long id,
             String username,
             MessageUpdateRequest dto
     ) {
-        User user = userService.findByUsername(username);
 
-        Message message = messageRepository.findById(id)
-            .orElseThrow(() ->
-                new ResourceNotFoundException("Message not found")
-            );
-
-        if (!message.getOwner().getId().equals(user.getId())) {
-            throw new ForbiddenException("You can't update this message");
-        }
+        Message message = messageRepository
+                .findByIdAndOwner_Username(id, username)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Message not found")
+                );
 
         if (dto.content() != null) message.setContent(dto.content());
         if (dto.category() != null) message.setCategory(dto.category());
@@ -94,14 +83,10 @@ public class MessageService {
             message.setDate(dto.date());
         }
 
-        return new MessageResponse(
-                messageRepository.save(message)
-        );
+        return new MessageResponse(message);
     }
 
-    /* =======================
-       Delete
-       ======================= */
+
 
     public void delete(Long id, String username) {
 
@@ -119,9 +104,7 @@ public class MessageService {
         messageRepository.delete(message);
     }
 
-    /* =======================
-       Secondaries
-       ======================= */
+
 
     private void validateDate(LocalDate date) {
         if (date.isAfter(LocalDate.now().plusDays(1))) {
