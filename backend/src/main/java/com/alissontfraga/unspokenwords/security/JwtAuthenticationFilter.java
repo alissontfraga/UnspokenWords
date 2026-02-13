@@ -1,17 +1,22 @@
 package com.alissontfraga.unspokenwords.security;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,15 +26,14 @@ import lombok.RequiredArgsConstructor;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final UserDetailsService userDetailsService;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-    String path = request.getServletPath();
-    
-    return path.startsWith("/api/auth/")
-            || path.startsWith("/swagger-ui")
-            || path.startsWith("/v3/api-docs");
+        String path = request.getServletPath();
+
+        return path.startsWith("/api/auth/")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs");
     }
 
     @Override
@@ -39,29 +43,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String token = extractToken(request);
+        String token = extractTokenFromCookie(request);
 
         if (token != null
-                && jwtUtil.validate(token)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            authenticate(token, request);
+            try {
+                DecodedJWT decoded = jwtUtil.decode(token);
+
+                String username = jwtUtil.extractUsername(decoded);
+                List<String> roles = jwtUtil.extractRoles(decoded);
+
+                authenticate(username, roles, request);
+
+            } catch (JWTVerificationException ex) {
+                // token inválido ou expirado
+            }
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private void authenticate(String token, HttpServletRequest request) {
-        String username = jwtUtil.getUsername(token);
+    private void authenticate(
+            String username,
+            List<String> roles,
+            HttpServletRequest request
+    ) {
 
-        UserDetails userDetails =
-                userDetailsService.loadUserByUsername(username);
+        List<GrantedAuthority> authorities =
+                roles.stream()
+                        .<GrantedAuthority>map(SimpleGrantedAuthority::new)
+                        .toList();
 
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
-                        userDetails,
+                        username,
                         null,
-                        userDetails.getAuthorities()
+                        authorities
                 );
 
         authentication.setDetails(
@@ -73,11 +91,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .setAuthentication(authentication);
     }
 
-    private String extractToken(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
+    private String extractTokenFromCookie(HttpServletRequest request) {
+        if (request.getCookies() == null) {
+            return null;
+        }
 
-        return (header != null && header.startsWith("Bearer "))
-                ? header.substring(7)
-                : null;
+        for (Cookie cookie : request.getCookies()) {
+            if ("token".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+
+        return null;
     }
 }
