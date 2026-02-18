@@ -6,7 +6,7 @@ A web application where users can write and store words they never said.
 
 ## 🚀 Features
 
-- User authentication (JWT bearer Auth0 + HttpOnly cookies)
+- User authentication (JWT with HttpOnly cookies)
 - Create personal messages
 - View your own messages
 - Delete messages
@@ -22,6 +22,8 @@ A web application where users can write and store words they never said.
 - JPA / Hibernate
 - PostgreSQL
 - JWT Authentication (Auth0)
+- Flyway
+- Docker
 
 ### Frontend
 - React
@@ -53,8 +55,4 @@ A web application where users can write and store words they never said.
 | GET    | /messages      | List messages  |
 | DELETE | /messages/{id} | Delete message |
 
-
-## 🧑‍💻 Author
-
-- Alisson Teles Fraga [@alissontfraga](https://github.com/alissontfraga)
 
