@@ -1,0 +1,21 @@
+
+//App  Usar o Spring Boot Dashboard ou
+
+docker compose up   
+docker compose up --build
+
+docker compose down   
+docker compose down   -v
+
+
+
+//Tests
+
+//excluir
+docker-compose -f docker-compose.test.yml down -v
+
+//criar
+docker-compose -f docker-compose.test.yml up -d
+
+//os dois
+docker-compose -f docker-compose.test.yml down -v && docker-compose -f docker-compose.test.yml up -d
