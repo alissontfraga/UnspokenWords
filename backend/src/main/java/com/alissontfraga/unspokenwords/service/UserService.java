@@ -1,6 +1,7 @@
 package com.alissontfraga.unspokenwords.service;
 
 import com.alissontfraga.unspokenwords.enums.Role;
+import com.alissontfraga.unspokenwords.exception.BadRequestException;
 import com.alissontfraga.unspokenwords.entity.User;
 import com.alissontfraga.unspokenwords.repository.UserRepository;
 
@@ -25,7 +26,7 @@ public class UserService {
 
     private User createUserWithRole(String username, String rawPassword, Role... roles) {
         if (userRepository.existsByUsername(username)) {
-            throw new IllegalArgumentException("Username already exists");
+            throw new BadRequestException("Username already exists");
         }
 
         User user = new User();
