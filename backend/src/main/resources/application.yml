@@ -2,11 +2,20 @@ spring:
   application:
     name: unspokenwords
 
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
   jpa:
     database: POSTGRESQL
     hibernate:
       ddl-auto: validate
-    show-sql: false 
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
   flyway:
     enabled: true
@@ -20,5 +29,5 @@ jwt:
   secret: ${JWT_SECRET}
   expiration-ms: ${JWT_EXPIRATION_MS}
 
-frontend:
-  origin: ${FRONTEND_ORIGIN}
+cors:
+  allowed-origins: ${FRONTEND_ORIGIN}
