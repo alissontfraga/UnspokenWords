@@ -1,0 +1,43 @@
+
+
+  services:
+    postgres-test:
+      image: postgres:18
+      container_name: unspokenwords-test-db
+      restart: always
+      environment:
+        POSTGRES_DB: test_db
+        POSTGRES_USER: test_user
+        POSTGRES_PASSWORD: test_pass
+      ports:
+        - "5433:5432" # porta externa do host
+      volumes:
+        - postgres_test_data:/var/lib/postgresql
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U test_user -d test_db"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+
+    backend-test:
+      build: ./backend
+      container_name: unspokenwords-api-test
+      restart: always
+      depends_on:
+        postgres-test:
+          condition: service_healthy
+      environment:
+        SPRING_PROFILES_ACTIVE: test
+        DB_HOST: postgres-test       # conecta ao container diretamente
+        DB_PORT: 5432                # porta interna do Postgres no container
+        DB_NAME: test_db
+        DB_USERNAME: test_user
+        DB_PASSWORD: test_pass
+        JWT_SECRET: testsecret
+        JWT_EXPIRATION_MS: 3600000
+        FRONTEND_ORIGIN: http://localhost:3000
+      ports:
+        - "8081:8080"
+
+  volumes:
+    postgres_test_data:

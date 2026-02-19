@@ -3,6 +3,7 @@ package com.alissontfraga.unspokenwords.controller;
 import java.time.Duration;
 
 import org.springframework.http.*;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final UserService userService;
+    private final UserService userService; 
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
@@ -43,10 +44,15 @@ public class AuthController {
             HttpServletResponse response
     ) {
 
-        User user = userService.findByUsername(req.username());
+        User user;
 
-        if (user == null ||
-            !passwordEncoder.matches(req.password(), user.getPassword())) {
+        try {
+            user = userService.findByUsername(req.username());
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (!passwordEncoder.matches(req.password(), user.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
@@ -54,7 +60,7 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from("token", token)
                 .httpOnly(true)
-                .secure(false) // true em produção (HTTPS)
+                .secure(false)
                 .path("/")
                 .sameSite("Lax")
                 .maxAge(Duration.ofHours(1))
