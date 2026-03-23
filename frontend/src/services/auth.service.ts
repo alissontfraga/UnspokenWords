@@ -4,7 +4,7 @@ export async function login(data: {
   username: string
   password: string
 }) {
-  return apiFetch("/auth/login", {
+  return apiFetch("/api/auth/login", {
     method: "POST",
     body: JSON.stringify(data),
   })
@@ -14,7 +14,7 @@ export async function register(data: {
   username: string
   password: string
 }) {
-  return apiFetch("/auth/register", {
+  return apiFetch("/api/auth/register", {
     method: "POST",
     body: JSON.stringify(data),
   })
