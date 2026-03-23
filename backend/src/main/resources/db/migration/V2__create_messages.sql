@@ -1,6 +1,6 @@
 CREATE TABLE messages (
     id BIGSERIAL PRIMARY KEY,
-    content VARCHAR(80) NOT NULL,
+    content TEXT NOT NULL,
     category VARCHAR(255) NOT NULL,
     for_person VARCHAR(255) NOT NULL,
     date DATE,
