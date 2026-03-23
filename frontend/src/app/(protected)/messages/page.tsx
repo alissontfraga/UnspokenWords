@@ -17,10 +17,15 @@ export default function MessagesPage() {
 
   async function load() {
     try {
-      const data = await apiFetch("/messages")
+      const data = await apiFetch("/api/messages")
       setMessages(data || [])
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
+  
+      if (err.message === "Unauthorized") {
+        window.location.href = "/signin"
+        return
+      }
     } finally {
       setLoading(false)
     }

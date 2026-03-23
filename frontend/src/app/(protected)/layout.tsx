@@ -8,13 +8,6 @@ export default async function ProtectedLayout({
   children: React.ReactNode
 }) {
 
-  const cookieStore = await cookies()
-  const token = cookieStore.get("token")
-
-  if (!token) {
-    redirect("/signin")
-  }
-
   return (
     <div className="min-h-screen flex flex-col">
 
