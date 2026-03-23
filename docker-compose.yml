@@ -1,3 +1,4 @@
+
 services:
   postgres:
     image: postgres:18
@@ -36,6 +37,19 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
+
+#  frontend:
+#    build: ./frontend
+#    container_name: unspokenwords-web
+#    restart: always
+#    depends_on:
+#      - backend
+#    ports:
+#      - "3000:3000"
+#    environment:
+#      NEXT_PUBLIC_API_URL: http://localhost:8080/api
+#      CHOKIDAR_USEPOLLING: "true"
+
 
 volumes:
   postgres_data:
