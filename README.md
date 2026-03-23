@@ -74,27 +74,6 @@ Before running this application, make sure you have the following installed:
 
 The application will automatically set up PostgreSQL database and run migrations for the backend.
 
-## 🏃‍♂️ Local Development Setup
-
-### Backend Setup
-
-1. **Navigate to backend directory**
-   ```bash
-   cd backend
-   ```
-
-2. **Set up environment variables**
-   Copy the `.env` file from the root directory or create your own with the required variables.
-
-3. **Start PostgreSQL** (using Docker)
-   ```bash
-   docker run --name postgres -e POSTGRES_DB=unspokenwords -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:18
-   ```
-
-4. **Run the backend**
-   ```bash
-   ./mvnw spring-boot:run
-   ```
 
 ### Frontend Setup
 
@@ -143,10 +122,7 @@ The application will automatically set up PostgreSQL database and run migrations
 | DELETE | `/messages/{id}`  | Delete message       | JWT required     |
 
 ### Authentication
-All message endpoints require JWT authentication. Include the JWT token in the `Authorization` header:
-```
-Authorization: Bearer <your-jwt-token>
-```
+All message endpoints require JWT authentication. 
 
 ## 🧪 Testing
 
@@ -155,29 +131,5 @@ Backend tests run with the dedicated Docker compose test stack:
 ```bash
 docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
 ```
-
-### Frontend Tests
-```bash
-cd frontend
-pnpm test
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-##  Author
-
-**Alisson T. Fraga** - [GitHub](https://github.com/alissontfraga)
-
-## 🙏 Acknowledgments
-
-- Built with ❤️ using Spring Boot and Next.js
-- UI components powered by Radix UI and Tailwind CSS
-- Icons from Lucide React
 
 
