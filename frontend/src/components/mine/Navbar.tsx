@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { LogOut } from "lucide-react"
+import { LogOut, MicOff } from "lucide-react"
 
 import {
   NavigationMenu,
@@ -23,7 +23,8 @@ export function Navbar() {
       <div className="flex h-12 items-center justify-between px-6">
 
         {/* Logo */}
-        <Link href="/messages" className="font-bold text-lg bg-cyan-300 px-4 py-1 rounded-md shadow text-shadow-2xs">
+        <Link href="/messages" className="flex items-center gap-2 font-bold text-lg bg-cyan-300 px-4 py-1 rounded-md shadow text-shadow-2xs">
+          <MicOff className="size-5" />
           UnspokenWords
         </Link>
 
